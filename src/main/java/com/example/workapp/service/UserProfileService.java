@@ -1,14 +1,16 @@
 package com.example.workapp.service;
 
 import com.example.workapp.dto.AuthResponse;
-import com.example.workapp.dto.LoginRequest;
-import com.example.workapp.dto.UserCVDTO;
-import com.example.workapp.dto.UserProfileDTO;
+import com.example.workapp.dto.AuthRequest;
+import com.example.workapp.dto.UserCVProfileDTO;
+import com.example.workapp.entity.TruckerProfile;
 import com.example.workapp.entity.UserProfile;
 import com.example.workapp.enums.UserRole;
 import com.example.workapp.exceptions.UserAlreadyExistsException;
+import com.example.workapp.repository.TruckerProfileRepo;
 import com.example.workapp.repository.UserProfileRepo;
 import com.example.workapp.security.JwtProvider;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -33,9 +35,11 @@ public class UserProfileService {
     private JwtProvider jwtProvider;
     @Autowired
     private CustomUserDetailsImp customUserDetailsImp;
+    @Autowired
+    private TruckerProfileRepo truckerProfileRepo;
 
 
-    public AuthResponse registerUser(UserProfileDTO request){
+    public AuthResponse registerUser(AuthRequest request){
         if (userProfileRepo.existsByEmail(request.getEmail())){
             throw new UserAlreadyExistsException(request.getEmail());
         }
@@ -57,7 +61,7 @@ public class UserProfileService {
         return authResponse;
     }
 
-    public AuthResponse login(LoginRequest request){
+    public AuthResponse login(AuthRequest request){
 
         String username = request.getEmail();
         Authentication authentication = authenticate(username, request.getPassword());
@@ -75,29 +79,52 @@ public class UserProfileService {
         return authResponse;
     }
 
-    public List<UserProfile> findAll(){
-        return userProfileRepo.findAll();
-    }
-
-    public void updateCV(UserCVDTO userCVDTO, String jwt) throws Exception {
+    @Transactional
+    public void updateCV(UserCVProfileDTO userCVProfileDTO, String jwt) throws Exception {
 
         String email = jwtProvider.getEmailFromJwtToken(jwt);
         UserProfile userProfile = findUserByEmail(email);
 
-        userProfile.setFirstName(userCVDTO.getFirstName());
-        userProfile.setLastName(userCVDTO.getLastName());
-        userProfile.setGender(userCVDTO.getGender());
-        userProfile.setAge(userCVDTO.getAge());
-        userProfile.setPlaceOfBirth(userCVDTO.getPlaceOfBirth());
-        userProfile.setPlaceOfResidence(userCVDTO.getPlaceOfResidence());
-        userProfile.setNationality(userCVDTO.getNationality());
-        userProfile.setEducationLevel(userCVDTO.getEducationLevel());
-        userProfile.setNameOfEducationalFacility(userCVDTO.getNameOfEducationalFacility());
-        userProfile.setDriversLicence(userCVDTO.getDriversLicence());
-        userProfile.setLanguages(userCVDTO.getLanguages());
-        userProfile.setProfession(userCVDTO.getProfession());
+        // Updating UserProfile fields
+        userProfile.setFirstName(userCVProfileDTO.getFirstName());
+        userProfile.setLastName(userCVProfileDTO.getLastName());
+        userProfile.setGender(userCVProfileDTO.getGender());
+        userProfile.setAge(userCVProfileDTO.getAge());
+        userProfile.setPlaceOfResidence(userCVProfileDTO.getPlaceOfResidence());
+        userProfile.setNationality(userCVProfileDTO.getNationality());
+        userProfile.setEducationLevel(userCVProfileDTO.getEducationLevel());
+        userProfile.setNameOfEducationalFacility(userCVProfileDTO.getNameOfEducationalFacility());
+        userProfile.setDriversLicence(userCVProfileDTO.getDriversLicence());
+        userProfile.setLanguages(userCVProfileDTO.getLanguages());
+        userProfile.setProfession(userCVProfileDTO.getProfession());
 
 
+        // Handling the TruckerProfile entity
+        TruckerProfile truckerProfile = userProfile.getTruckerProfile();
+        if (truckerProfile == null) {
+            // Create a new TruckerProfile if it doesn't exist
+            truckerProfile = new TruckerProfile();
+            truckerProfile.setUserProfile(userProfile);
+        }
+
+        // Updating TruckerProfile fields
+
+        truckerProfile.setYearsOfExperience(userCVProfileDTO.getYearsOfExperience());
+        truckerProfile.setHazardousMaterialsCertified(userCVProfileDTO.getHazardousMaterialsCertified());
+        truckerProfile.setPreviousEmployments(userCVProfileDTO.getPreviousEmployments());
+        truckerProfile.setContractType(userCVProfileDTO.getContractType());
+        truckerProfile.setStatesOfEmploymentOfInterest(userCVProfileDTO.getStatesOfEmploymentOfInterest());
+        truckerProfile.setWillingToRelocate(userCVProfileDTO.getWillingToRelocate());
+        truckerProfile.setLoadingUnloadingGoods(userCVProfileDTO.getLoadingUnloadingGoods());
+        truckerProfile.setDriversLicences(userCVProfileDTO.getDriversLicences());
+        truckerProfile.setJobInterest(userCVProfileDTO.getJobInterest());
+        truckerProfile.setAccommodationCostsByEmployer(userCVProfileDTO.getAccommodationCostsByEmployer());
+        truckerProfile.setExpectedNETSalary(userCVProfileDTO.getExpectedNETSalary());
+
+        // Linking truckerProfile with userProfile
+        userProfile.setTruckerProfile(truckerProfile);
+
+        // Save userProfile (this will also save truckerProfile due to cascading)
         userProfileRepo.save(userProfile);
 
     }

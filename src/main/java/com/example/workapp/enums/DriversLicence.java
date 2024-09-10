@@ -1,5 +1,5 @@
 package com.example.workapp.enums;
 
 public enum DriversLicence {
-    B, C, CE, D, DE, FORKLIFT
+    B, C, C_E, D, D_E, FORKLIFT
 }

@@ -1,6 +1,6 @@
 package com.example.workapp.controller;
 
-import com.example.workapp.dto.UserCVDTO;
+import com.example.workapp.dto.UserCVProfileDTO;
 import com.example.workapp.service.UserProfileService;
 import com.example.workapp.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,7 +24,7 @@ public class UserController {
     }
 
     @PostMapping("/updateCV")
-    public ResponseEntity<?> updateCV( @RequestBody UserCVDTO userCVDTO, @RequestHeader("Authorization") String jwt) throws Exception {
+    public ResponseEntity<?> updateCV(@RequestBody UserCVProfileDTO userCVDTO, @RequestHeader("Authorization") String jwt) throws Exception {
         userProfileService.updateCV(userCVDTO, jwt);
         return ResponseEntity.ok("CV updated");
     }

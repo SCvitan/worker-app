@@ -14,10 +14,12 @@ public class UserServiceImp implements UserService {
     @Autowired
     private JwtProvider jwtProvider;
 
+
     @Override
     public UserProfile findUserByJwtToken(String jwt) throws Exception {
         String email = jwtProvider.getEmailFromJwtToken(jwt);
         UserProfile userProfile = findUserByEmail(email);
+
         return userProfile;
     }
 
@@ -32,5 +34,8 @@ public class UserServiceImp implements UserService {
 
         return userProfile;
     }
-
 }
+
+
+
+
